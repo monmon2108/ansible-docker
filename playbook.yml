@@ -1,0 +1,65 @@
+---
+- hosts: all
+  gather_facts: no
+  become: yes
+  vars_prompt:
+    - name: "host_name"
+      prompt: "Hostname?"
+      private: no
+    - name: "username"
+      prompt: "Username?"
+      private: no
+    - name: "password"
+      prompt: "Password?"
+      private: yes
+
+
+  tasks:
+    - add_host:
+        hostname: "centos"
+        ansible_host: "{{host_name}}"
+        ansible_user: "{{username}}"
+        ansible_ssh_password: "{{password}}"
+        groups: centosgroup
+    # - name: "username password"
+    #   user: name={{username}} password={{password}}
+- hosts: centosgroup
+  become: yes
+  tasks:
+  - debug: msg="can do it"
+  - name: update yum
+    raw: yum -y update
+  - name: install tools
+    yum: name={{item}} state=present update_cache=yes
+    with_items:
+      - libselinux-python
+      - git
+      - vim
+      - wget
+      - bzip2
+      - make
+      - gcc
+      - gcc-c++
+      - bison
+      - libtool
+      - automake
+      - patch
+      - zlib-devel
+      - libxml2-devel
+      - openssl-devel
+      - libyaml-devel
+      - libffi-devel
+      - readline-devel
+      - gdbm-devel
+      - ncurses-devel
+      - libcurl-devel
+      - pcre-devel
+      - sqlite-devel
+      - libxslt
+      - libxslt-devel
+  - name: copy file docker repo
+    copy: src=docker.repo dest=/etc/yum.repos.d/docker.repo
+  - name: install docker
+    yum: name=docker-engine state=present update_cache=yes
+  - name: start docker
+    service: name=docker state=started enabled=yes
